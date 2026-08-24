@@ -439,7 +439,14 @@
         }
 
         // ================================================================
-        // 2. CARREGAR DADOS
+        // 2. CHAVES UNIFICADAS
+        // ================================================================
+        const POSTS_KEY = 'portfolioPosts';
+        const PROJETOS_KEY = 'portfolioProjetos';
+        const NOTIFICACOES_KEY = 'dashboardNotificacoes';
+
+        // ================================================================
+        // 3. CARREGAR DADOS
         // ================================================================
         function loadData() {
             const profile = JSON.parse(localStorage.getItem('profileData')) || {
@@ -453,9 +460,9 @@
                 avatar: '',
                 cover: ''
             };
-            const posts = JSON.parse(localStorage.getItem('dashboardPosts')) || [];
-            const projetos = JSON.parse(localStorage.getItem('dashboardProjetos')) || [];
-            const notificacoes = JSON.parse(localStorage.getItem('dashboardNotificacoes')) || [];
+            const posts = JSON.parse(localStorage.getItem(POSTS_KEY)) || [];
+            const projetos = JSON.parse(localStorage.getItem(PROJETOS_KEY)) || [];
+            const notificacoes = JSON.parse(localStorage.getItem(NOTIFICACOES_KEY)) || [];
             const ratings = JSON.parse(localStorage.getItem('portfolioRatings')) || [];
             const feedbacks = JSON.parse(localStorage.getItem('portfolioFeedbacks')) || [];
             const reviewers = JSON.parse(localStorage.getItem('portfolioReviewers')) || [];
@@ -463,7 +470,7 @@
         }
 
         // ================================================================
-        // 3. RENDER PERFIL
+        // 4. RENDER PERFIL
         // ================================================================
         function renderProfile() {
             const { profile } = loadData();
@@ -500,7 +507,7 @@
         }
 
         // ================================================================
-        // 4. RENDER PROJETOS
+        // 5. RENDER PROJETOS
         // ================================================================
         function renderProjetos() {
             const { projetos } = loadData();
@@ -529,7 +536,7 @@
         }
 
         // ================================================================
-        // 5. RENDER PUBLICAÇÕES
+        // 6. RENDER PUBLICAÇÕES
         // ================================================================
         function renderPosts() {
             const { posts, profile } = loadData();
@@ -566,7 +573,7 @@
         }
 
         // ================================================================
-        // 6. RENDER NOTIFICAÇÕES
+        // 7. RENDER NOTIFICAÇÕES
         // ================================================================
         function renderNotificacoes() {
             const { notificacoes } = loadData();
@@ -588,7 +595,7 @@
         }
 
         // ================================================================
-        // 7. RENDER AVALIAÇÕES
+        // 8. RENDER AVALIAÇÕES
         // ================================================================
         function renderAvaliacoes() {
             const { ratings, feedbacks, reviewers } = loadData();
@@ -631,7 +638,7 @@
         }
 
         // ================================================================
-        // 8. SISTEMA DE AVALIAÇÃO
+        // 9. SISTEMA DE AVALIAÇÃO
         // ================================================================
         let selectedRating = 0;
         const stars = document.querySelectorAll('#ratingStars i');
@@ -676,21 +683,22 @@
             localStorage.setItem('portfolioReviewers', JSON.stringify(reviewers));
 
             stars.forEach(s => s.classList.remove('active'));
+            const ratingValue = selectedRating;
             selectedRating = 0;
             document.getElementById('ratingFeedback').value = '';
 
             renderAvaliacoes();
 
             // Notificação automática
-            let notificacoes = JSON.parse(localStorage.getItem('dashboardNotificacoes')) || [];
+            let notificacoes = JSON.parse(localStorage.getItem(NOTIFICACOES_KEY)) || [];
             notificacoes.unshift({
                 id: Date.now(),
                 icone: 'fa-star',
                 titulo: 'Nova avaliação recebida!',
-                descricao: `${name} avaliou com ${selectedRating} estrelas${feedback ? ' e deixou feedback' : ''}.`,
+                descricao: `${name} avaliou com ${ratingValue} estrelas${feedback ? ' e deixou feedback' : ''}.`,
                 data: 'Agora'
             });
-            localStorage.setItem('dashboardNotificacoes', JSON.stringify(notificacoes));
+            localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(notificacoes));
             renderNotificacoes();
 
             this.innerHTML = '<i class="fas fa-check"></i> Enviado!';
@@ -702,7 +710,7 @@
         });
 
         // ================================================================
-        // 9. INIT
+        // 10. INIT
         // ================================================================
         function init() {
             renderProfile();
@@ -710,14 +718,14 @@
             renderPosts();
             renderNotificacoes();
             renderAvaliacoes();
-            // Atualizar a cada 10 segundos
+            // Atualizar a cada 15 segundos
             setInterval(() => {
                 renderProjetos();
                 renderPosts();
                 renderNotificacoes();
                 renderAvaliacoes();
-            }, 10000);
-            console.log('Site carregado com sucesso!');
+            }, 15000);
+            console.log('📌 Site carregado com sucesso!');
         }
         init();
     </script>
