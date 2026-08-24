@@ -672,7 +672,44 @@
         history.pushState(null, '', window.location.href);
 
         // ================================================================
-        // 3. DATA
+        // 3. CHAVES UNIFICADAS
+        // ================================================================
+        const POSTS_KEY = 'portfolioPosts';
+        const PROJETOS_KEY = 'portfolioProjetos';
+        const NOTIFICACOES_KEY = 'dashboardNotificacoes';
+
+        // ================================================================
+        // 4. FUNÇÕES DE CARGA/SALVAMENTO
+        // ================================================================
+        function loadPosts() {
+            const stored = localStorage.getItem(POSTS_KEY);
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function savePosts(posts) {
+            localStorage.setItem(POSTS_KEY, JSON.stringify(posts));
+        }
+
+        function loadProjetos() {
+            const stored = localStorage.getItem(PROJETOS_KEY);
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function saveProjetos(projetos) {
+            localStorage.setItem(PROJETOS_KEY, JSON.stringify(projetos));
+        }
+
+        function loadNotificacoes() {
+            const stored = localStorage.getItem(NOTIFICACOES_KEY);
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function saveNotificacoes(notificacoes) {
+            localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(notificacoes));
+        }
+
+        // ================================================================
+        // 5. DATA
         // ================================================================
         let profileData = JSON.parse(localStorage.getItem('profileData')) || {
             name: 'Milton Mateus Sebastião',
@@ -686,15 +723,12 @@
             cover: ''
         };
 
-        let posts = JSON.parse(localStorage.getItem('dashboardPosts')) || [];
-        let projetos = JSON.parse(localStorage.getItem('dashboardProjetos')) || [];
-        let notificacoes = JSON.parse(localStorage.getItem('dashboardNotificacoes')) || [
-            { id: 1, icone: 'fa-rocket', titulo: 'Bem-vindo ao Dashboard!', descricao: 'Comece a gerenciar seu portfólio agora.',
-            data: 'Agora' }
-        ];
+        let posts = loadPosts();
+        let projetos = loadProjetos();
+        let notificacoes = loadNotificacoes();
 
         // ================================================================
-        // 4. RENDER
+        // 6. RENDER
         // ================================================================
         function renderAll() {
             renderPosts();
@@ -708,6 +742,7 @@
         function renderPosts() {
             const container = document.getElementById('postsList');
             const profile = JSON.parse(localStorage.getItem('profileData')) || profileData;
+            posts = loadPosts();
             if (posts.length === 0) {
                 container.innerHTML = '<p style="color:var(--text-secondary); padding:20px; text-align:center;">Nenhuma publicação.</p>';
                 return;
@@ -737,6 +772,7 @@
 
         function renderProjetos() {
             const container = document.getElementById('listaProjetos');
+            projetos = loadProjetos();
             if (projetos.length === 0) {
                 container.innerHTML = '<p style="color:var(--text-secondary);">Nenhum projeto cadastrado.</p>';
                 return;
@@ -759,6 +795,7 @@
 
         function renderNotificacoes() {
             const container = document.getElementById('listaNotificacoes');
+            notificacoes = loadNotificacoes();
             if (notificacoes.length === 0) {
                 container.innerHTML = '<p style="color:var(--text-secondary);">Nenhuma notificação.</p>';
                 return;
@@ -841,9 +878,12 @@
         }
 
         function updateStats() {
+            posts = loadPosts();
+            projetos = loadProjetos();
+            notificacoes = loadNotificacoes();
+            const ratings = JSON.parse(localStorage.getItem('portfolioRatings')) || [];
             document.getElementById('totalPosts').textContent = posts.length;
             document.getElementById('totalProjetos').textContent = projetos.length;
-            const ratings = JSON.parse(localStorage.getItem('portfolioRatings')) || [];
             document.getElementById('totalAvaliacoes').textContent = ratings.length;
             document.getElementById('totalNotificacoes').textContent = notificacoes.length;
             document.getElementById('resumoPosts').textContent = posts.length;
@@ -861,7 +901,7 @@
         }
 
         // ================================================================
-        // 5. CRUD POSTS
+        // 7. CRUD POSTS
         // ================================================================
         let postMediaFile = null;
         let postMediaType = '';
@@ -918,6 +958,9 @@
                 return;
             }
 
+            // Carregar posts mais recentes
+            posts = loadPosts();
+
             const newPost = {
                 id: Date.now(),
                 texto: texto || '📷 Nova publicação',
@@ -934,18 +977,22 @@
                     newPost.media = e.target.result;
                     newPost.mediaType = postMediaType;
                     posts.unshift(newPost);
-                    localStorage.setItem('dashboardPosts', JSON.stringify(posts));
+                    savePosts(posts);
                     renderPosts();
                     updateStats();
                     clearPostForm();
+                    alert('✅ Publicação adicionada com sucesso!');
+                    console.log('✅ Nova publicação adicionada! Total:', posts.length);
                 };
                 reader.readAsDataURL(postMediaFile);
             } else {
                 posts.unshift(newPost);
-                localStorage.setItem('dashboardPosts', JSON.stringify(posts));
+                savePosts(posts);
                 renderPosts();
                 updateStats();
                 clearPostForm();
+                alert('✅ Publicação adicionada com sucesso!');
+                console.log('✅ Nova publicação adicionada! Total:', posts.length);
             }
         });
 
@@ -965,13 +1012,14 @@
         function deletePost(id) {
             if (!confirm('Excluir esta publicação?')) return;
             posts = posts.filter(p => p.id !== id);
-            localStorage.setItem('dashboardPosts', JSON.stringify(posts));
+            savePosts(posts);
             renderPosts();
             updateStats();
+            console.log('🗑️ Publicação excluída! Restam:', posts.length);
         }
 
         // ================================================================
-        // 6. CRUD PROJETOS (com imagem/vídeo)
+        // 8. CRUD PROJETOS
         // ================================================================
         let projetoMediaFile = null;
         let projetoMediaType = '';
@@ -996,6 +1044,8 @@
                 return;
             }
 
+            projetos = loadProjetos();
+
             const novoProjeto = {
                 id: Date.now(),
                 titulo,
@@ -1013,28 +1063,28 @@
                     novoProjeto.media = ev.target.result;
                     novoProjeto.mediaType = projetoMediaType;
                     projetos.push(novoProjeto);
-                    localStorage.setItem('dashboardProjetos', JSON.stringify(projetos));
+                    saveProjetos(projetos);
                     renderProjetos();
                     updateStats();
                     document.getElementById('formProjeto').reset();
                     projetoMediaFile = null;
-                    alert('Projeto adicionado com sucesso!');
+                    alert('✅ Projeto adicionado com sucesso!');
                 };
                 reader.readAsDataURL(projetoMediaFile);
             } else {
                 projetos.push(novoProjeto);
-                localStorage.setItem('dashboardProjetos', JSON.stringify(projetos));
+                saveProjetos(projetos);
                 renderProjetos();
                 updateStats();
                 document.getElementById('formProjeto').reset();
-                alert('Projeto adicionado com sucesso!');
+                alert('✅ Projeto adicionado com sucesso!');
             }
         });
 
         function excluirProjeto(id) {
             if (!confirm('Excluir este projeto?')) return;
             projetos = projetos.filter(p => p.id !== id);
-            localStorage.setItem('dashboardProjetos', JSON.stringify(projetos));
+            saveProjetos(projetos);
             renderProjetos();
             updateStats();
         }
@@ -1051,7 +1101,7 @@
         }
 
         // ================================================================
-        // 7. CRUD NOTIFICAÇÕES
+        // 9. CRUD NOTIFICAÇÕES
         // ================================================================
         document.getElementById('formNotificacao').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1062,24 +1112,25 @@
                 alert('Preencha todos os campos.');
                 return;
             }
+            notificacoes = loadNotificacoes();
             notificacoes.unshift({ id: Date.now(), icone, titulo, descricao, data: 'Agora' });
-            localStorage.setItem('dashboardNotificacoes', JSON.stringify(notificacoes));
+            saveNotificacoes(notificacoes);
             renderNotificacoes();
             updateStats();
             this.reset();
-            alert('Notificação publicada!');
+            alert('✅ Notificação publicada!');
         });
 
         function excluirNotificacao(id) {
             if (!confirm('Excluir esta notificação?')) return;
             notificacoes = notificacoes.filter(n => n.id !== id);
-            localStorage.setItem('dashboardNotificacoes', JSON.stringify(notificacoes));
+            saveNotificacoes(notificacoes);
             renderNotificacoes();
             updateStats();
         }
 
         // ================================================================
-        // 8. PERFIL
+        // 10. PERFIL
         // ================================================================
         document.getElementById('profileForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1094,7 +1145,7 @@
             profile.cover = document.getElementById('profileCoverInput').value.trim();
             localStorage.setItem('profileData', JSON.stringify(profile));
             renderProfile();
-            alert('Perfil atualizado!');
+            alert('✅ Perfil atualizado!');
         });
 
         document.getElementById('avatarInput').addEventListener('change', function(e) {
@@ -1112,7 +1163,7 @@
         });
 
         // ================================================================
-        // 9. NAVEGAÇÃO
+        // 11. NAVEGAÇÃO
         // ================================================================
         function showSection(section) {
             document.querySelectorAll('#contentArea > div').forEach(div => div.style.display = 'none');
@@ -1156,7 +1207,7 @@
         });
 
         // ================================================================
-        // 10. THEME
+        // 12. THEME
         // ================================================================
         const themeToggleDash = document.getElementById('themeToggleDash');
         let currentThemeDash = localStorage.getItem('theme') || 'dark';
@@ -1177,15 +1228,16 @@
         }
 
         // ================================================================
-        // 11. INIT
+        // 13. INIT
         // ================================================================
         function initDashboard() {
             profileData = JSON.parse(localStorage.getItem('profileData')) || profileData;
-            posts = JSON.parse(localStorage.getItem('dashboardPosts')) || [];
-            projetos = JSON.parse(localStorage.getItem('dashboardProjetos')) || [];
-            notificacoes = JSON.parse(localStorage.getItem('dashboardNotificacoes')) || notificacoes;
+            posts = loadPosts();
+            projetos = loadProjetos();
+            notificacoes = loadNotificacoes();
             renderAll();
             showSection('dashboard');
+            console.log('📊 Dashboard inicializado com', posts.length, 'publicações');
         }
 
         initDashboard();
